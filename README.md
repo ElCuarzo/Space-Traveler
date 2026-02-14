@@ -20,7 +20,7 @@ Para que la aplicación funcione correctamente con la API, se recomienda usar **
    - `GET /missions/:id`: Retorna el detalle de una misión.
 
 ## 🚀 Pasos para ejecutar el proyecto
-1.-Abrir el proyecto en Android Studio Ladybug (2024.2.1) o superior.
-2. Asegurarse de que el servidor Mockoon esté corriendo en el puerto `3000`.
-3. Si usas un emulador, la `BASE_URL` ya está configurada como `http://10.0.2.2:3000/` en build.gradle.kts nivel app.
+1. Abrir el proyecto en Android Studio Ladybug (2024.2.1) o superior.  
+2. Asegurarse de que el servidor Mockoon esté corriendo en el puerto `3000`.  
+3. Si usas un emulador, la `BASE_URL` ya está configurada como `http://10.0.2.2:3000/` en el `build.gradle.kts` del módulo app.  
 4. Sincronizar Gradle y ejecutar la aplicación.
