@@ -1,4 +1,7 @@
 package com.example.spacetraveler.domain.usecase
 
-class GetMissionUseCase {
+import com.example.spacetraveler.domain.repository.MissionRepository
+
+class GetMissionsUseCase(private val repository: MissionRepository) {
+    operator fun invoke() = repository.getMissions()
 }
