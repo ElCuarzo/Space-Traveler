@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spacetraveler.core.NetworkError
 import com.example.spacetraveler.core.Resource
+import com.example.spacetraveler.core.ui.UiEvent
 import com.example.spacetraveler.domain.model.Mission
 import com.example.spacetraveler.domain.repository.MissionRepository
 import com.example.spacetraveler.domain.repository.OfflineOperationsRepository
@@ -17,8 +18,10 @@ import com.example.spacetraveler.utils.NetworkStatus
 import com.example.spacetraveler.utils.isValidDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,6 +46,9 @@ class MissionViewModel @Inject constructor(
 
     private val networkStatus = NetworkStatus(context)
 
+    private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val uiEvent = _uiEvent.asSharedFlow()
+
     init {
         observeNetwork()
         loadMissions()
@@ -52,7 +58,7 @@ class MissionViewModel @Inject constructor(
     private fun observeNetwork() {
         viewModelScope.launch {
             networkStatus.isOnline.collect { isOnline ->
-                Log.d("MissionViewModel", "Network status changed: isOnline=$isOnline")
+                Log.d("MissionViewModel", "Estado de la red: isOnline=$isOnline")
                 if (isOnline) {
                     _isLoading.value = true
                     val syncedOps = safeInvoke { offlineOperationsRepository.syncOfflineOperations(5000) }
@@ -118,14 +124,16 @@ class MissionViewModel @Inject constructor(
             }) {
                 is Resource.Success -> {
                     loadMissions()
-                    logPendingOperations()
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Misión creada correctamente"))
                     onResult(true)
                 }
                 is Resource.Error -> {
-                    _errorMessage.value = mapError(
+                    val message = mapError(
                         resource.errorType ?: NetworkError.UNKNOWN,
                         resource.message
                     )
+                    _errorMessage.value = message
+                    _uiEvent.emit(UiEvent.ShowSnackbar(message))
                     onResult(false)
                 }
                 is Resource.Loading -> {}
@@ -138,11 +146,18 @@ class MissionViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             when (val resource = safeInvoke { deleteMissionUseCase(id) }) {
-                is Resource.Success -> loadMissions()
-                is Resource.Error -> _errorMessage.value = mapError(
-                    resource.errorType ?: NetworkError.UNKNOWN,
-                    resource.message
-                )
+                is Resource.Success -> {
+                    loadMissions()
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Misión eliminada correctamente"))
+                }
+                is Resource.Error -> {
+                    val message = mapError(
+                        resource.errorType ?: NetworkError.UNKNOWN,
+                        resource.message
+                    )
+                    _errorMessage.value = message
+                    _uiEvent.emit(UiEvent.ShowSnackbar(message))
+                }
                 is Resource.Loading -> {}
             }
             _isLoading.value = false

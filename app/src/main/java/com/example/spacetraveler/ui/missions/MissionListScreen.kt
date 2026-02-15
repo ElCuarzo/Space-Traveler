@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.spacetraveler.utils.parseDateFlexible
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -27,7 +26,7 @@ import java.util.Locale
 
 @Composable
 fun MissionListScreen(
-    viewModel: MissionViewModel = hiltViewModel(),
+    viewModel: MissionViewModel,
     onCreateMissionClick: () -> Unit,
     onMissionClick: (Int) -> Unit,
     onDeleteMissionClick: (Int) -> Unit

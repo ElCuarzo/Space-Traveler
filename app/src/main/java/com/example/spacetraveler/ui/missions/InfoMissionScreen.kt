@@ -11,7 +11,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.spacetraveler.utils.parseDateFlexible
 import java.text.SimpleDateFormat
 import java.util.*
@@ -19,7 +18,7 @@ import java.util.*
 @Composable
 fun InfoMissionScreen(
     missionId: Int,
-    viewModel: MissionViewModel = hiltViewModel(),
+    viewModel: MissionViewModel,
     onBackClick: () -> Unit
 ) {
 
