@@ -10,12 +10,12 @@ interface MissionRepository {
 
     suspend fun getMissionById(id: String): Mission?
 
-    suspend fun createMission(mission: Mission): Result<Unit>
+    suspend fun createMission(mission: Mission): Resource<Unit>
 
     suspend fun syncPendingMissions(): Result<Unit>
 
     suspend fun getAllMissions(): Resource<List<Mission>>
 
-    suspend fun deleteMission(id: Int)
+    suspend fun deleteMission(id: Int): Resource<Unit>
 
 }

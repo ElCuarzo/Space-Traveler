@@ -13,7 +13,6 @@ import com.example.spacetraveler.domain.repository.OfflineOperationsRepository
 import com.example.spacetraveler.domain.usecase.CreateMissionUseCase
 import com.example.spacetraveler.domain.usecase.DeleteMissionUseCase
 import com.example.spacetraveler.domain.usecase.GetAllMissionsUseCase
-import com.example.spacetraveler.domain.usecase.safeInvoke
 import com.example.spacetraveler.utils.NetworkStatus
 import com.example.spacetraveler.utils.isValidDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,10 +60,16 @@ class MissionViewModel @Inject constructor(
                 Log.d("MissionViewModel", "Estado de la red: isOnline=$isOnline")
                 if (isOnline) {
                     _isLoading.value = true
-                    val syncedOps = safeInvoke { offlineOperationsRepository.syncOfflineOperations(5000) }
-                    if (syncedOps is Resource.Success) {
-                        Log.d("MissionViewModel", "Operaciones sincronizadas: ${syncedOps.data.size}")
+                    try {
+                        val syncedOps = offlineOperationsRepository.syncOfflineOperations(5000)
+                        Log.d("MissionViewModel", "Operaciones sincronizadas: ${syncedOps.size}")
+                    } catch (e: Exception) {
+                        Log.e("MissionViewModel", "Error al sincronizar operaciones", e)
+                        _uiEvent.emit(
+                            UiEvent.ShowSnackbar("Error al sincronizar operaciones: ${e.localizedMessage ?: "desconocido"}")
+                        )
                     }
+
                     logPendingOperations()
                     _isLoading.value = false
                 }
@@ -115,13 +120,11 @@ class MissionViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-
             _isLoading.value = true
-            when (val resource = safeInvoke {
-                createMissionUseCase(
-                    Mission(0, nombre, planetaDestino, fechaLanzamiento, descripcion)
-                )
-            }) {
+
+            when (val resource = createMissionUseCase(
+                Mission(0, nombre, planetaDestino, fechaLanzamiento, descripcion)
+            )) {
                 is Resource.Success -> {
                     loadMissions()
                     _uiEvent.emit(UiEvent.ShowSnackbar("Misión creada correctamente"))
@@ -138,6 +141,7 @@ class MissionViewModel @Inject constructor(
                 }
                 is Resource.Loading -> {}
             }
+
             _isLoading.value = false
         }
     }
@@ -145,7 +149,8 @@ class MissionViewModel @Inject constructor(
     fun deleteMission(id: Int) {
         viewModelScope.launch {
             _isLoading.value = true
-            when (val resource = safeInvoke { deleteMissionUseCase(id) }) {
+
+            when (val resource: Resource<Unit> = deleteMissionUseCase(id)) {
                 is Resource.Success -> {
                     loadMissions()
                     _uiEvent.emit(UiEvent.ShowSnackbar("Misión eliminada correctamente"))
@@ -160,6 +165,7 @@ class MissionViewModel @Inject constructor(
                 }
                 is Resource.Loading -> {}
             }
+
             _isLoading.value = false
         }
     }

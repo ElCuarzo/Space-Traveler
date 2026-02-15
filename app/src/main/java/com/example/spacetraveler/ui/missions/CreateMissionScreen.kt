@@ -156,8 +156,7 @@ fun CreateMissionScreen(
                         planetaDestino,
                         fechaLanzamiento,
                         descripcion
-                    ) { success ->
-
+                    ) { success: Boolean ->
                         if (success) {
                             onMissionCreated()
                         }

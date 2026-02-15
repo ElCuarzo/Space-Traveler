@@ -33,7 +33,7 @@ class MissionRepositoryImpl @Inject constructor(
         return dao.getMissionById(missionId)?.let { MissionMapper.fromEntityToDomain(it) }
     }
 
-    override suspend fun createMission(mission: Mission): Result<Unit> {
+    override suspend fun createMission(mission: Mission): Resource<Unit> {
         val entity = MissionMapper.fromDomainToEntity(mission, isSynced = false)
         val generatedId = dao.insertMission(entity).toInt()
         val entityWithId = entity.copy(id = generatedId)
@@ -41,14 +41,14 @@ class MissionRepositoryImpl @Inject constructor(
         return when (val resource = safeApiResponse { api.createMission(MissionMapper.fromEntityToDto(entityWithId)) }) {
             is Resource.Success -> {
                 dao.markMissionAsSynced(generatedId)
-                Result.success(Unit)
+                Resource.Success(Unit)
             }
             is Resource.Error -> {
                 val operation = OfflineOperation(type = "create", missionId = generatedId)
                 offlineDao.insertOperation(operation)
-                Result.failure(Exception(resource.message))
+                Resource.Error(resource.message, resource.errorType)
             }
-            is Resource.Loading -> Result.success(Unit)
+            is Resource.Loading -> Resource.Loading
         }
     }
 
@@ -88,12 +88,17 @@ class MissionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteMission(id: Int) {
+    override suspend fun deleteMission(id: Int): Resource<Unit> {
         dao.deleteMissionById(id)
         val resource = safeApiResponse { api.deleteMission(id) }
-        if (resource is Resource.Error) {
+        return if (resource is Resource.Success) {
+            Resource.Success(Unit)
+        } else if (resource is Resource.Error) {
             val operation = OfflineOperation(type = "delete", missionId = id)
             offlineDao.insertOperation(operation)
+            Resource.Error(resource.message, resource.errorType)
+        } else {
+            Resource.Loading
         }
     }
 }
