@@ -8,7 +8,6 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
-import retrofit2.http.PUT
 
 interface MissionApi {
 
@@ -30,9 +29,6 @@ interface MissionApi {
 
     @POST("missions")
     suspend fun createMission(@Body mission: MissionDto): Response<MissionDto>
-
-    @PUT("missions/{id}")
-    suspend fun updateMission(@Path("id") id: Int, @Body mission: MissionDto): Response<MissionDto>
 
     @DELETE("missions/{id}")
     suspend fun deleteMission(@Path("id") id: Int): Response<Unit>

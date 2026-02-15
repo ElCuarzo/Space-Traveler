@@ -18,12 +18,6 @@ interface MissionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMissions(missions: List<MissionEntity>)
 
-    @Query("SELECT * FROM missions WHERE isSynced = 0")
-    suspend fun getPendingMissions(): List<MissionEntity>
-
-    @Update
-    suspend fun updateMission(mission: MissionEntity)
-
     @Query("DELETE FROM missions WHERE id = :missionId")
     suspend fun deleteMissionById(missionId: Int)
 

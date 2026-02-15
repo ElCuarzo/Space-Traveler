@@ -11,8 +11,6 @@ import com.example.spacetraveler.data.remote.MissionApi
 import com.example.spacetraveler.data.remote.MissionDto
 import com.example.spacetraveler.domain.model.Mission
 import com.example.spacetraveler.domain.repository.MissionRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
@@ -21,12 +19,6 @@ class MissionRepositoryImpl @Inject constructor(
     private val offlineDao: OfflineOperationDao,
     private val dao: MissionDao
 ) : MissionRepository {
-
-    override fun getMissions(): Flow<Result<List<Mission>>> {
-        return dao.getAllMissions().map { list ->
-            Result.success(list.map { MissionMapper.fromEntityToDomain(it) })
-        }
-    }
 
     override suspend fun getMissionByIdWithFallback(id: Int): Resource<Mission> {
         val localMission = dao.getMissionById(id)?.let { MissionMapper.fromEntityToDomain(it) }
@@ -69,21 +61,6 @@ class MissionRepositoryImpl @Inject constructor(
                 Resource.Error(resource.message, resource.errorType)
             }
             is Resource.Loading -> Resource.Loading
-        }
-    }
-
-    override suspend fun syncPendingMissions(): Result<Unit> {
-        return try {
-            val pending = dao.getPendingMissions()
-            pending.forEach { mission ->
-                val resource = safeApiResponse { api.createMission(MissionMapper.fromEntityToDto(mission)) }
-                if (resource is Resource.Success) {
-                    dao.updateMission(mission.copy(isSynced = true))
-                }
-            }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
