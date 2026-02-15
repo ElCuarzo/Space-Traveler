@@ -1,5 +1,6 @@
 package com.example.spacetraveler.ui.missions
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -150,13 +151,17 @@ fun CreateMissionScreen(
 
             Button(
                 onClick = {
+                    Log.d("DEBUG_BOTON", "Botón presionado")
                     viewModel.createMission(
                         nombre,
                         planetaDestino,
                         fechaLanzamiento,
                         descripcion
                     ) { success ->
-                        if (success) onMissionCreated()
+
+                        if (success) {
+                            onMissionCreated()
+                        }
                     }
                 },
                 enabled = isFormValid,

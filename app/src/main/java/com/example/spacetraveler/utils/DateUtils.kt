@@ -25,7 +25,7 @@ fun parseDateFlexible(dateString: String): Date? {
 
 fun isValidDate(date: String): Boolean {
     return try {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val sdf = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
         sdf.isLenient = false
         sdf.parse(date)
         true
