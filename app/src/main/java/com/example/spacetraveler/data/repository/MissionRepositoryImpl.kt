@@ -28,9 +28,29 @@ class MissionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getMissionById(id: String): Mission? {
-        val missionId = id.toIntOrNull() ?: return null
-        return dao.getMissionById(missionId)?.let { MissionMapper.fromEntityToDomain(it) }
+    override suspend fun getMissionByIdWithFallback(id: Int): Resource<Mission> {
+        val localMission = dao.getMissionById(id)?.let { MissionMapper.fromEntityToDomain(it) }
+
+        return try {
+            when (val remote = safeApiResponse { api.getMissionById(id) }) {
+                is Resource.Success -> {
+                    val entity = MissionMapper.fromDtoToEntity(remote.data)
+                    dao.insertMission(entity)
+                    Resource.Success(MissionMapper.fromEntityToDomain(entity))
+                }
+                is Resource.Error -> {
+                    localMission?.let { Resource.Success(it) } ?: Resource.Error(
+                        remote.message,
+                        remote.errorType
+                    )
+                }
+                is Resource.Loading -> {
+                    localMission?.let { Resource.Success(it) } ?: Resource.Loading
+                }
+            }
+        } catch (e: Exception) {
+            localMission?.let { Resource.Success(it) } ?: Resource.Error("Error al obtener misión: ${e.localizedMessage}")
+        }
     }
 
     override suspend fun createMission(mission: Mission): Resource<Unit> {

@@ -13,6 +13,7 @@ import com.example.spacetraveler.domain.repository.OfflineOperationsRepository
 import com.example.spacetraveler.domain.usecase.CreateMissionUseCase
 import com.example.spacetraveler.domain.usecase.DeleteMissionUseCase
 import com.example.spacetraveler.domain.usecase.GetAllMissionsUseCase
+import com.example.spacetraveler.domain.usecase.GetMissionDetailUseCase
 import com.example.spacetraveler.utils.NetworkStatus
 import com.example.spacetraveler.utils.isValidDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,11 +43,15 @@ class MissionViewModel @Inject constructor(
     private val getAllMissionsUseCase = GetAllMissionsUseCase(missionRepository)
     private val createMissionUseCase = CreateMissionUseCase(missionRepository)
     private val deleteMissionUseCase = DeleteMissionUseCase(missionRepository)
+    private val getMissionDetailUseCase = GetMissionDetailUseCase(missionRepository)
 
     private val networkStatus = NetworkStatus(context)
 
     private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvent = _uiEvent.asSharedFlow()
+
+    private val _mission = MutableStateFlow<Mission?>(null)
+    val mission: StateFlow<Mission?> = _mission.asStateFlow()
 
     init {
         observeNetwork()
@@ -97,6 +102,20 @@ class MissionViewModel @Inject constructor(
             }
 
             _isLoading.value = false
+        }
+    }
+
+    fun loadMissionById(id: Int) {
+        viewModelScope.launch {
+            _errorMessage.value = null
+            when (val resource = getMissionDetailUseCase(id)) {
+                is Resource.Success -> _mission.value = resource.data
+                is Resource.Error -> {
+                    _mission.value = null
+                    _errorMessage.value = resource.message
+                }
+                is Resource.Loading -> {}
+            }
         }
     }
 

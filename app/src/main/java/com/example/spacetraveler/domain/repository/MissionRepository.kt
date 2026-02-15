@@ -8,7 +8,7 @@ interface MissionRepository {
 
     fun getMissions(): Flow<Result<List<Mission>>>
 
-    suspend fun getMissionById(id: String): Mission?
+    suspend fun getMissionByIdWithFallback(id: Int): Resource<Mission>
 
     suspend fun createMission(mission: Mission): Resource<Unit>
 

@@ -21,9 +21,11 @@ fun InfoMissionScreen(
     viewModel: MissionViewModel,
     onBackClick: () -> Unit
 ) {
+    val mission by viewModel.mission.collectAsState()
 
-    val missions = viewModel.missions.collectAsState().value
-    val mission = missions.find { it.id == missionId }
+    LaunchedEffect(missionId) {
+        viewModel.loadMissionById(missionId)
+    }
 
     Column(
         modifier = Modifier
@@ -40,7 +42,7 @@ fun InfoMissionScreen(
             fontWeight = FontWeight.Bold
         )
 
-        mission?.let {
+        mission?.let { it ->
 
             Column(
                 modifier = Modifier
@@ -69,12 +71,10 @@ fun InfoMissionScreen(
                 Text(text = it.descripcion)
             }
 
-        } ?: run {
-            Text(
-                text = "Misión no encontrada",
-                color = Color.Red
-            )
-        }
+        } ?: Text(
+            text = "Misión no encontrada",
+            color = Color.Red
+        )
 
         Spacer(modifier = Modifier.weight(1f))
 
